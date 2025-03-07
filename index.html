@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chúc Mừng Ngày 8/3</title>
+    <style>
+        body {
+            background-color: black;
+            overflow: hidden;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            font-family: 'Dancing Script', cursive;
+        }
+        canvas {
+            background-color: transparent;
+        }
+    </style>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script&display=swap" rel="stylesheet">
+</head>
+<body>
+    <canvas id="myCanvas"></canvas>
+    <script>
+        var canvas = document.getElementById("myCanvas");
+        var ctx = canvas.getContext("2d");
+
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        var particles = [];
+        var fireworks = [];
+
+        function createParticle() {
+            var particle = {
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                size: Math.random() * 15 + 5,
+                opacity: Math.random() * 0.5 + 0.5,
+                driftX: (Math.random() - 0.5) * 2,
+                driftY: Math.random(),
+                color: `rgba(255, ${Math.random() * 155 + 100}, ${Math.random() * 155 + 100}, 1)`,
+                type: Math.random() > 0.66 ? 'heart' : (Math.random() > 0.5 ? 'flower' : 'bloomingFlower')
+            };
+            particles.push(particle);
+        }
+
+        for (let i = 0; i < 200; i++) {
+            createParticle();
+        }
+
+        function drawHeart(x, y, size, opacity, color) {
+            ctx.save();
+            ctx.translate(x, y);
+            ctx.beginPath();
+            ctx.moveTo(0, -size / 4);
+            ctx.bezierCurveTo(size / 8, -size / 2, size / 3, -size / 2, size / 2, -size / 4);
+            ctx.bezierCurveTo(size / 2, size / 3, size / 6, size / 2, 0, size / 2);
+            ctx.bezierCurveTo(-size / 6, size / 2, -size / 2, size / 3, -size / 2, -size / 4);
+            ctx.bezierCurveTo(-size / 3, -size / 2, -size / 8, -size / 2, 0, -size / 4);
+            ctx.fillStyle = color;
+            ctx.fill();
+            ctx.restore();
+        }
+
+        function drawFlower(x, y, size, opacity, color) {
+            ctx.save();
+            ctx.translate(x, y);
+            ctx.beginPath();
+            for (let i = 0; i < 5; i++) {
+                ctx.lineTo(0, size);
+                ctx.translate(0, size);
+                ctx.rotate((Math.PI * 2 / 5));
+                ctx.translate(0, -size);
+            }
+            ctx.closePath();
+            ctx.fillStyle = color;
+            ctx.fill();
+            ctx.restore();
+        }
+
+        function drawBloomingFlower(x, y, size, opacity, color) {
+            drawHeart(x, y, size * 1.5, opacity, color);
+            drawFlower(x, y, size, opacity, color);
+        }
+
+        function createFirework() {
+            var startX = Math.random() * canvas.width;
+            var startY = Math.random() * canvas.height * 0.7;
+            var targetX = startX + (Math.random() - 0.5) * 200;
+            var targetY = startY + (Math.random() - 0.5) * 200;
+            
+            var firework = {
+                x: startX,
+                y: startY,
+                targetX: targetX,
+                targetY: targetY,
+                ySpeed: Math.random() * 5 + 3,
+                size: 5,
+                color: `rgba(${Math.random() * 255}, ${Math.random() * 255}, ${Math.random() * 255}, 1)`,
+                particles: [],
+                state: 'falling',
+                layerCount: Math.floor(Math.random() * 3) + 1
+            };
+            fireworks.push(firework);
+        }
+
+        function drawFirework(firework) {
+            ctx.beginPath();
+            ctx.arc(firework.x, firework.y, firework.size, 0, Math.PI * 2);
+            ctx.fillStyle = firework.color;
+            ctx.fill();
+        }
+
+        function explodeFirework(firework) {
+            const heartPoints = getHeartPoints(firework.targetX, firework.targetY, 30); // Giảm kích thước trái tim
+            for (let i = 0; i < heartPoints.length; i++) {
+                var particle = {
+                    x: firework.targetX,
+                    y: firework.targetY,
+                    xVelocity: (heartPoints[i].x - firework.targetX) * 0.05, // Giảm tốc độ
+                    yVelocity: (heartPoints[i].y - firework.targetY) * 0.05, // Giảm tốc độ
+                    size: 2, // Giảm kích thước hạt
+                    color: firework.color,
+                    life: 30 // Tăng tuổi thọ hạt
+                };
+                firework.particles.push(particle);
+            }
+        }
+
+        function getHeartPoints(x, y, size) {
+            let points = [];
+            for (let angle = 0; angle < 2 * Math.PI; angle += 0.02) {
+                let pointX = x + size * 16 * Math.pow(Math.sin(angle), 3);
+                let pointY = y - size * (13 * Math.cos(angle) - 5 * Math.cos(2 * angle) - 2 * Math.cos(3 * angle) - Math.cos(4 * angle));
+                points.push({x: pointX, y: pointY});
+            }
+            return points;
+        }
+
+        function drawFireworkParticles(firework) {
+            for (let i = 0; i < firework.particles.length; i++) {
+                let particle = firework.particles[i];
+                ctx.beginPath();
+                ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
+                ctx.fillStyle = particle.color;
+                ctx.fill();
+            }
+        }
+
+        function updateParticles() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            for (let i = 0; i < particles.length; i++) {
+                let particle = particles[i];
+
+                particle.x += particle.driftX;
+                particle.y -= particle.driftY;
+
+                particle.y += Math.sin(Date.now() * 0.005 + particle.x) * 0.3;
+                particle.x += Math.cos(Date.now() * 0.005 + particle.y) * 0.3;
+
+                if (particle.type === 'heart') {
+                    drawHeart(particle.x, particle.y, particle.size, particle.opacity, particle.color);
+                } else if (particle.type === 'flower') {
+                    drawFlower(particle.x, particle.y, particle.size, particle.opacity, particle.color);
+                } else {
+                    drawBloomingFlower(particle.x, particle.y, particle.size, particle.opacity, particle.color);
+                }
+
+                if (particle.x < -particle.size || particle.x > canvas.width + particle.size || particle.y < -particle.size) {
+                    particles.splice(i, 1);
+                    createParticle();
+                }
+            }
+
+            drawFloatingText();
+
+            for (let i = 0; i < fireworks.length; i++) {
+                let firework = fireworks[i];
+
+                if (firework.state === 'falling') {
+                    drawFirework(firework);
+                    let dx = firework.targetX - firework.x;
+                    let dy = firework.targetY - firework.y;
+                    let distance = Math.sqrt(dx * dx + dy * dy);
+
+                    if (distance > 5) {
+                        let angle = Math.atan2(dy, dx);
+                        firework.x += Math.cos(angle) * firework.ySpeed;
+                        firework.y += Math.sin(angle) * firework.ySpeed;
+                    } else {
+                        firework.state = 'exploded';
+                        for (let layer = 0; layer < firework.layerCount; layer++) {
+                            explodeFirework(firework);
+                        }
+                        
+                    }
+                }
+
+                if (firework.state === 'exploded') {
+                    drawFireworkParticles(firework);
+                    for (let j = 0; j < firework.particles.length; j++) {
+                        let particle = firework.particles[j];
+                        particle.x += particle.xVelocity;
+                        particle.y += particle.yVelocity;
+                        particle.life--;
+                        if (particle.life <= 0) {
+                            firework.particles.splice(j, 1);
+                            j--;
+                        }
+                    }
+
+                    if (firework.particles.length === 0) {
+                        fireworks.splice(i, 1);
+                        i--;
+                    }
+                }
+            }
+
+            requestAnimationFrame(updateParticles);
+        }
+
+        function drawFloatingText() {
+            ctx.save();
+            ctx.font = "bold 72px 'Dancing Script'";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            let text = "Chúc mừng ngày 8/3 vui vẻ!";
+            let x = canvas.width / 2;
+            let y = canvas.height / 2 + Math.sin(Date.now() * 0.002) * 20;
+
+            let brightness = Math.abs(Math.sin(Date.now() * 0.005));
+            ctx.fillStyle = `rgba(255, 204, 204, ${brightness})`;
+
+            ctx.shadowColor = 'rgba(255, 255, 255, 0.5)';
+            ctx.shadowBlur = 10;
+            ctx.shadowOffsetX = 2;
+            ctx.shadowOffsetY = 2;
+
+            ctx.fillText(text, x, y);
+            ctx.restore();
+        }
+
+        updateParticles();
+
+        setInterval(() => {
+            for (let i = 0; i < 5; i++) {
+                createParticle();
+            }
+        }, 500);
+
+        setInterval(() => {
+            createFirework();
+        }, 1000);
+
+        window.addEventListener('resize', function() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+    </script>
+</body>
+</html>
